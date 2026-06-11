@@ -1,19 +1,17 @@
+import { useTheme } from "../context/ThemeContext";
+
 export default function ProgressBar(): React.ReactElement {
+  const { accent } = useTheme();
+
   return (
-    <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+    <div
+      className="w-full rounded-full h-1.5 overflow-hidden"
+      style={{ background: "rgba(255,255,255,0.10)" }}
+    >
       <div
-        className="h-full bg-purple-500 rounded-full"
-        style={{
-          animation: "progress-indeterminate 1.5s ease-in-out infinite",
-        }}
+        className="h-full rounded-full animate-progress-indeterminate"
+        style={{ background: accent }}
       />
-      <style>{`
-        @keyframes progress-indeterminate {
-          0% { transform: translateX(-100%); width: 60%; }
-          50% { transform: translateX(80%); width: 50%; }
-          100% { transform: translateX(200%); width: 40%; }
-        }
-      `}</style>
     </div>
   );
 }

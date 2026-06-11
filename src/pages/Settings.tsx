@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getSamplerInfo, type SamplerInfo } from "../lib/api";
+import GlassCard from "../components/GlassCard";
+import PageTitle from "../components/PageTitle";
 
 function formatDbSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -17,25 +19,41 @@ function SettingRow({
   value: string;
 }): React.ReactElement {
   return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <span className="text-sm text-gray-400">{label}</span>
-      <span className="text-sm font-mono text-gray-200">{value}</span>
+    <div
+      className="flex items-center justify-between px-4 py-3"
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+    >
+      <span className="text-sm font-sans" style={{ color: "rgba(255,255,255,0.62)" }}>
+        {label}
+      </span>
+      <span className="text-sm font-mono" style={{ color: "rgba(255,255,255,0.80)" }}>
+        {value}
+      </span>
     </div>
   );
 }
 
 export default function Settings(): React.ReactElement {
   const [info, setInfo] = useState<SamplerInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getSamplerInfo().then(setInfo).catch(console.error);
+    getSamplerInfo()
+      .then(setInfo)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Failed to load settings"));
   }, []);
 
   return (
-    <div className="p-4 space-y-4 max-w-lg">
-      <h2 className="text-lg font-semibold text-gray-200">Settings</h2>
+    <div className="space-y-4 max-w-lg mx-auto">
+      <PageTitle>Settings</PageTitle>
 
-      <div className="bg-gray-900 rounded-lg border border-gray-800 divide-y divide-gray-800">
+      {error && (
+        <div className="text-sm" style={{ color: "#F0604E" }}>
+          {error}
+        </div>
+      )}
+
+      <GlassCard className="!p-0">
         <SettingRow
           label="Sampler"
           value={
@@ -66,13 +84,13 @@ export default function Settings(): React.ReactElement {
           label="Database Path"
           value="%LOCALAPPDATA%\Burrow\burrow.db"
         />
-      </div>
+      </GlassCard>
 
-      <div className="bg-gray-900 rounded-lg border border-gray-800 divide-y divide-gray-800">
+      <GlassCard className="!p-0">
         <SettingRow label="Version" value="0.1.0" />
         <SettingRow label="Engine" value="Mole-Windows (PowerShell)" />
         <SettingRow label="Window Manager" value="Tauri v2" />
-      </div>
+      </GlassCard>
     </div>
   );
 }

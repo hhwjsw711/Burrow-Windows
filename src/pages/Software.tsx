@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useScanner } from "../hooks/useScanner";
 import ProgressBar from "../components/ProgressBar";
+import GlassCard from "../components/GlassCard";
+import LogTerminal from "../components/LogTerminal";
+import { PrimaryButton } from "../components/ActionButton";
+import PageTitle from "../components/PageTitle";
 
 interface AppInfo {
   name: string;
@@ -49,29 +53,29 @@ export default function Software(): React.ReactElement {
   );
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-200">
-        Installed Software
-      </h2>
-      <p className="text-sm text-gray-500">
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <PageTitle>Installed Software</PageTitle>
+      <p className="text-sm" style={{ color: "rgba(255,255,255,0.40)" }}>
         View and manage applications installed on your system.
       </p>
 
       <div className="flex gap-3">
-        <button
-          onClick={handleScan}
-          disabled={running}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
+        <PrimaryButton onClick={handleScan} disabled={running}>
           Scan Installed Apps
-        </button>
+        </PrimaryButton>
       </div>
 
       {running && <ProgressBar />}
 
       {result && apps.length === 0 && hasJson && (
-        <div className="bg-yellow-900/30 border border-yellow-800 rounded-lg p-4">
-          <div className="text-yellow-400 text-sm mb-2">
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: "#E6A93C15",
+            border: "1px solid #E6A93C40",
+          }}
+        >
+          <div className="text-sm mb-2" style={{ color: "#E6A93C" }}>
             Output is JSON format.{" "}
             <button
               onClick={() => setShowRaw(!showRaw)}
@@ -81,23 +85,25 @@ export default function Software(): React.ReactElement {
             </button>
           </div>
           {showRaw && (
-            <div
-              ref={scrollRef}
-              className="bg-gray-950 border border-gray-800 rounded-lg p-4 h-80 overflow-y-auto font-mono text-xs"
-            >
-              {lines.map((line, i) => (
-                <div key={i} className="text-gray-400 leading-relaxed">
-                  {line}
-                </div>
-              ))}
-            </div>
+            <LogTerminal
+              lines={lines}
+              running={false}
+              emptyMessage=""
+              scrollRef={scrollRef}
+            />
           )}
         </div>
       )}
 
       {apps.length > 0 && (
-        <div className="bg-gray-900 rounded-lg border border-gray-800">
-          <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 uppercase">
+        <GlassCard className="!p-0">
+          <div
+            className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-mono font-bold uppercase tracking-label"
+            style={{
+              borderBottom: "1px solid rgba(255,255,255,0.085)",
+              color: "rgba(255,255,255,0.40)",
+            }}
+          >
             <div className="col-span-8">Application</div>
             <div className="col-span-4 text-right">Size</div>
           </div>
@@ -105,31 +111,30 @@ export default function Software(): React.ReactElement {
             {apps.map((app, i) => (
               <div
                 key={i}
-                className="grid grid-cols-12 gap-2 px-4 py-2 text-sm border-b border-gray-800/50 hover:bg-gray-800/50"
+                className="grid grid-cols-12 gap-2 px-4 py-2.5 text-sm"
+                style={{
+                  borderBottom: "1px solid rgba(255,255,255,0.05)",
+                }}
               >
-                <div className="col-span-8 text-gray-300 truncate">
+                <div className="col-span-8 truncate font-sans text-[13px]" style={{ color: "rgba(255,255,255,0.80)" }}>
                   {app.name}
                 </div>
-                <div className="col-span-4 text-right text-gray-500 font-mono text-xs">
+                <div className="col-span-4 text-right font-mono text-[11px]" style={{ color: "rgba(255,255,255,0.40)" }}>
                   {app.size}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       )}
 
       {result && apps.length === 0 && !hasJson && (
-        <div
-          ref={scrollRef}
-          className="bg-gray-950 border border-gray-800 rounded-lg p-4 h-80 overflow-y-auto font-mono text-xs"
-        >
-          {lines.map((line, i) => (
-            <div key={i} className="text-gray-400 leading-relaxed">
-              {line}
-            </div>
-          ))}
-        </div>
+        <LogTerminal
+          lines={lines}
+          running={false}
+          emptyMessage=""
+          scrollRef={scrollRef}
+        />
       )}
     </div>
   );

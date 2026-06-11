@@ -1,16 +1,17 @@
 import ReactECharts from "echarts-for-react";
+import GlassCard, { Eyebrow } from "./GlassCard";
 
 function gaugeColor(value: number, title: string): string {
   if (title === "CPU") {
-    return value < 50 ? "#A5D6A7" : value < 80 ? "#FFD75F" : "#FF5F5F";
+    return value < 50 ? "#57D58E" : value < 80 ? "#F0B24A" : "#F0604E";
   }
   if (title === "Memory") {
-    return value < 60 ? "#A5D6A7" : value < 85 ? "#FFD75F" : "#FF5F5F";
+    return value < 60 ? "#57D58E" : value < 85 ? "#F0B24A" : "#F0604E";
   }
   if (title === "Disk") {
-    return value < 70 ? "#A5D6A7" : value < 90 ? "#FFD75F" : "#FF5F5F";
+    return value < 70 ? "#57D58E" : value < 90 ? "#F0B24A" : "#F0604E";
   }
-  return "#A5D6A7";
+  return "#57D58E";
 }
 
 function buildGaugeOption(
@@ -35,7 +36,7 @@ function buildGaugeOption(
         axisLine: {
           lineStyle: {
             width: 6,
-            color: [[1, "#1f2937"]],
+            color: [[1, "rgba(255,255,255,0.10)"]],
           },
         },
         axisTick: { show: false },
@@ -46,7 +47,7 @@ function buildGaugeOption(
           offsetCenter: [0, "70%"],
           valueAnimation: true,
           fontSize: 18,
-          fontFamily: "monospace",
+          fontFamily: "Consolas, monospace",
           color: color,
           formatter: `{value}%`,
         },
@@ -99,6 +100,7 @@ export interface MetricCardProps {
   sparklineData?: number[];
   color?: string;
   subtitle?: string;
+  accent?: string;
 }
 
 export default function MetricCard({
@@ -108,16 +110,17 @@ export default function MetricCard({
   sparklineData,
   color,
   subtitle,
+  accent,
 }: MetricCardProps): React.ReactElement {
-  const resolvedColor = color ?? (value !== undefined ? gaugeColor(value, title) : "#A5D6A7");
+  const resolvedColor = color ?? (value !== undefined ? gaugeColor(value, title) : "#57D58E");
   const hasSparkline = sparklineData && sparklineData.length > 1;
 
   return (
-    <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex flex-col">
+    <GlassCard className="flex flex-col">
       <div className="flex items-start justify-between mb-1">
-        <div className="text-xs text-gray-500 uppercase">{title}</div>
+        <Eyebrow label={title} accent={accent} />
         {valueLabel && (
-          <div className="text-xs font-mono text-gray-400 truncate ml-2 max-w-[60%] text-right">
+          <div className="text-[10px] font-mono truncate ml-2 max-w-[60%] text-right" style={{ color: "rgba(255,255,255,0.40)" }}>
             {valueLabel}
           </div>
         )}
@@ -146,10 +149,10 @@ export default function MetricCard({
       )}
 
       {subtitle && (
-        <div className="text-xs text-gray-500 mt-1 font-mono truncate">
+        <div className="text-[9px] font-mono mt-1 truncate" style={{ color: "rgba(255,255,255,0.40)" }}>
           {subtitle}
         </div>
       )}
-    </div>
+    </GlassCard>
   );
 }

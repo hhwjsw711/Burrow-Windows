@@ -2,6 +2,8 @@ import { useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { useHistory, type TimeRange, RANGES } from "../hooks/useHistory";
 import ProcessTable from "../components/ProcessTable";
+import GlassCard from "../components/GlassCard";
+import PageTitle from "../components/PageTitle";
 
 interface ChartPoint {
   collected_at: string;
@@ -25,13 +27,17 @@ function buildLineOption(
     xAxis: {
       type: "category",
       data: times,
-      axisLine: { lineStyle: { color: "#333" } },
-      axisLabel: { color: "#666", fontSize: 10, interval: "auto" },
+      axisLine: { lineStyle: { color: "rgba(255,255,255,0.10)" } },
+      axisLabel: { color: "rgba(255,255,255,0.25)", fontSize: 10, interval: "auto" },
     },
     yAxis: {
       type: "value",
-      splitLine: { lineStyle: { color: "#1a1a2e" } },
-      axisLabel: { color: "#666", fontSize: 10, formatter: `{value}${unit}` },
+      splitLine: { lineStyle: { color: "rgba(255,255,255,0.05)" } },
+      axisLabel: {
+        color: "rgba(255,255,255,0.25)",
+        fontSize: 10,
+        formatter: `{value}${unit}`,
+      },
     },
     tooltip: {
       trigger: "axis",
@@ -60,6 +66,45 @@ function buildLineOption(
       },
     ],
   };
+}
+
+function buildAxisConfig(unit: string): Record<string, unknown> {
+  return {
+    grid: { top: 28, right: 10, bottom: 20, left: 45 },
+    xAxis: {
+      type: "category",
+      axisLine: { lineStyle: { color: "rgba(255,255,255,0.10)" } },
+      axisLabel: { color: "rgba(255,255,255,0.25)", fontSize: 10, interval: "auto" },
+    },
+    yAxis: {
+      type: "value",
+      splitLine: { lineStyle: { color: "rgba(255,255,255,0.05)" } },
+      axisLabel: { color: "rgba(255,255,255,0.25)", fontSize: 10, formatter: unit },
+    },
+    tooltip: { trigger: "axis" },
+  };
+}
+
+function ChartCard({
+  title,
+  option,
+}: {
+  title: string;
+  option: Record<string, unknown>;
+}): React.ReactElement {
+  return (
+    <GlassCard className="!p-3" style={{ height: 220 }}>
+      <div className="text-[10px] font-mono font-bold uppercase tracking-label text-center mb-1" style={{ color: "rgba(255,255,255,0.40)" }}>
+        {title}
+      </div>
+      <ReactECharts
+        option={option}
+        style={{ height: "calc(100% - 16px)" }}
+        notMerge={true}
+        lazyUpdate={true}
+      />
+    </GlassCard>
+  );
 }
 
 export default function History(): React.ReactElement {
@@ -94,28 +139,17 @@ export default function History(): React.ReactElement {
 
   const hasData = snapshots.length > 0;
 
-  const diskTimes = snapshots.map((s) => formatTime(s.collected_at));
   const diskOption: Record<string, unknown> = {
-    grid: { top: 28, right: 10, bottom: 20, left: 45 },
+    ...buildAxisConfig("{value} MB/s"),
     xAxis: {
       type: "category",
-      data: diskTimes,
-      axisLine: { lineStyle: { color: "#333" } },
-      axisLabel: { color: "#666", fontSize: 10, interval: "auto" },
+      data: snapshots.map((s) => formatTime(s.collected_at)),
+      axisLine: { lineStyle: { color: "rgba(255,255,255,0.10)" } },
+      axisLabel: { color: "rgba(255,255,255,0.25)", fontSize: 10, interval: "auto" },
     },
-    yAxis: {
-      type: "value",
-      splitLine: { lineStyle: { color: "#1a1a2e" } },
-      axisLabel: {
-        color: "#666",
-        fontSize: 10,
-        formatter: "{value} MB/s",
-      },
-    },
-    tooltip: { trigger: "axis" },
     legend: {
       data: ["Read", "Write"],
-      textStyle: { color: "#888", fontSize: 10 },
+      textStyle: { color: "rgba(255,255,255,0.40)", fontSize: 10 },
       top: 0,
     },
     series: [
@@ -125,7 +159,7 @@ export default function History(): React.ReactElement {
         data: diskReadData.map((d) => d.value),
         smooth: true,
         showSymbol: false,
-        lineStyle: { color: "#A5D6A7", width: 1.5 },
+        lineStyle: { color: "#57D58E", width: 1.5 },
       },
       {
         name: "Write",
@@ -133,33 +167,22 @@ export default function History(): React.ReactElement {
         data: diskWriteData.map((d) => d.value),
         smooth: true,
         showSymbol: false,
-        lineStyle: { color: "#FFD75F", width: 1.5 },
+        lineStyle: { color: "#F0B24A", width: 1.5 },
       },
     ],
   };
 
-  const netTimes = snapshots.map((s) => formatTime(s.collected_at));
   const netOption: Record<string, unknown> = {
-    grid: { top: 28, right: 10, bottom: 20, left: 45 },
+    ...buildAxisConfig("{value} MB/s"),
     xAxis: {
       type: "category",
-      data: netTimes,
-      axisLine: { lineStyle: { color: "#333" } },
-      axisLabel: { color: "#666", fontSize: 10, interval: "auto" },
+      data: snapshots.map((s) => formatTime(s.collected_at)),
+      axisLine: { lineStyle: { color: "rgba(255,255,255,0.10)" } },
+      axisLabel: { color: "rgba(255,255,255,0.25)", fontSize: 10, interval: "auto" },
     },
-    yAxis: {
-      type: "value",
-      splitLine: { lineStyle: { color: "#1a1a2e" } },
-      axisLabel: {
-        color: "#666",
-        fontSize: 10,
-        formatter: "{value} MB/s",
-      },
-    },
-    tooltip: { trigger: "axis" },
     legend: {
       data: ["Down", "Up"],
-      textStyle: { color: "#888", fontSize: 10 },
+      textStyle: { color: "rgba(255,255,255,0.40)", fontSize: 10 },
       top: 0,
     },
     series: [
@@ -177,113 +200,66 @@ export default function History(): React.ReactElement {
         data: netUpData.map((d) => d.value),
         smooth: true,
         showSymbol: false,
-        lineStyle: { color: "#FF8A65", width: 1.5 },
+        lineStyle: { color: "#F2894E", width: 1.5 },
       },
     ],
   };
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Controls */}
+    <div className="space-y-4">
+      <PageTitle>History</PageTitle>
+
       <div className="flex items-center justify-between">
-        <div className="flex gap-1">
+        <div
+          className="flex items-center gap-0.5 rounded-full px-1 py-1"
+          style={{
+            background: "rgba(0,0,0,0.22)",
+            border: "1px solid rgba(255,255,255,0.085)",
+          }}
+        >
           {(Object.keys(RANGES) as TimeRange[]).map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                range === r
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-              }`}
+              className="px-3 py-1 rounded-full text-[11px] font-mono font-medium transition-all duration-150"
+              style={{
+                background: range === r ? "white" : "transparent",
+                color: range === r ? "#0B0B0D" : "rgba(255,255,255,0.40)",
+              }}
             >
               {RANGES[r].label}
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-400">
+        <label className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.40)" }}>
           <input
             type="checkbox"
             checked={autoRefresh}
             onChange={(e) => setAutoRefresh(e.target.checked)}
-            className="accent-purple-600"
+            className="h-3.5 w-3.5 rounded"
           />
           Auto-refresh
         </label>
       </div>
 
       {loading && !hasData ? (
-        <div className="h-96 flex items-center justify-center text-gray-500">
+        <div className="h-96 flex items-center justify-center" style={{ color: "rgba(255,255,255,0.40)" }}>
           Loading history...
         </div>
       ) : !hasData ? (
-        <div className="h-96 flex items-center justify-center text-gray-600">
+        <div className="h-96 flex items-center justify-center" style={{ color: "rgba(255,255,255,0.25)" }}>
           No data for this range. Wait for the sampler to collect more
           snapshots.
         </div>
       ) : (
         <>
-          {/* 2x2 Chart Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div
-              className="bg-gray-900 rounded-lg border border-gray-800 p-3"
-              style={{ height: 220 }}
-            >
-              <div className="text-xs text-gray-500 text-center mb-1">
-                CPU
-              </div>
-              <ReactECharts
-                option={buildLineOption(cpuData, "#FF5F5F", "%")}
-                style={{ height: "calc(100% - 16px)" }}
-                notMerge={true}
-                lazyUpdate={true}
-              />
-            </div>
-            <div
-              className="bg-gray-900 rounded-lg border border-gray-800 p-3"
-              style={{ height: 220 }}
-            >
-              <div className="text-xs text-gray-500 text-center mb-1">
-                Memory
-              </div>
-              <ReactECharts
-                option={buildLineOption(memData, "#FFD75F", "%")}
-                style={{ height: "calc(100% - 16px)" }}
-                notMerge={true}
-                lazyUpdate={true}
-              />
-            </div>
-            <div
-              className="bg-gray-900 rounded-lg border border-gray-800 p-3"
-              style={{ height: 220 }}
-            >
-              <div className="text-xs text-gray-500 text-center mb-1">
-                Disk I/O
-              </div>
-              <ReactECharts
-                option={diskOption}
-                style={{ height: "calc(100% - 16px)" }}
-                notMerge={true}
-                lazyUpdate={true}
-              />
-            </div>
-            <div
-              className="bg-gray-900 rounded-lg border border-gray-800 p-3"
-              style={{ height: 220 }}
-            >
-              <div className="text-xs text-gray-500 text-center mb-1">
-                Network I/O
-              </div>
-              <ReactECharts
-                option={netOption}
-                style={{ height: "calc(100% - 16px)" }}
-                notMerge={true}
-                lazyUpdate={true}
-              />
-            </div>
+            <ChartCard title="CPU" option={buildLineOption(cpuData, "#F0604E", "%")} />
+            <ChartCard title="Memory" option={buildLineOption(memData, "#F0B24A", "%")} />
+            <ChartCard title="Disk I/O" option={diskOption} />
+            <ChartCard title="Network I/O" option={netOption} />
           </div>
 
-          {/* Top Processes */}
           <ProcessTable processes={processes} />
         </>
       )}

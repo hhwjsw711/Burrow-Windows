@@ -1,5 +1,12 @@
 import { useScanner } from "../hooks/useScanner";
+import { useTheme } from "../context/ThemeContext";
 import ProgressBar from "../components/ProgressBar";
+import GlassCard, { Eyebrow } from "../components/GlassCard";
+import LogTerminal from "../components/LogTerminal";
+import ResultBanner from "../components/ResultBanner";
+import { PrimaryButton, SecondaryButton } from "../components/ActionButton";
+import PageTitle from "../components/PageTitle";
+import { optimizeLineStyle } from "../lib/lineStyle";
 
 const optimizeSteps = [
   "Clear Windows Update cache",
@@ -14,83 +21,51 @@ const optimizeSteps = [
 export default function Optimize(): React.ReactElement {
   const { lines, running, result, startScan, scrollRef } =
     useScanner("optimize");
+  const { accent } = useTheme();
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-200">
-        System Optimization
-      </h2>
-      <p className="text-sm text-gray-500">
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <PageTitle>System Optimization</PageTitle>
+      <p className="text-sm" style={{ color: "rgba(255,255,255,0.40)" }}>
         Run safe system maintenance — rebuild caches, flush DNS, repair system
         services, and more.
       </p>
 
-      <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-        <div className="text-xs text-gray-500 uppercase mb-3">
-          Optimization Steps
-        </div>
-        <ul className="space-y-1">
+      <GlassCard>
+        <Eyebrow label="Optimization Steps" accent={accent} />
+        <ul className="space-y-1.5">
           {optimizeSteps.map((step, i) => (
-            <li key={i} className="text-sm text-gray-400">
+            <li
+              key={i}
+              className="text-sm font-mono"
+              style={{ color: "rgba(255,255,255,0.62)" }}
+            >
               • {step}
             </li>
           ))}
         </ul>
-      </div>
+      </GlassCard>
 
       <div className="flex gap-3">
-        <button
-          onClick={() => startScan(true)}
-          disabled={running}
-          className="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg text-sm hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
+        <SecondaryButton onClick={() => startScan(true)} disabled={running}>
           Dry Run
-        </button>
-        <button
-          onClick={() => startScan(false)}
-          disabled={running}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
+        </SecondaryButton>
+        <PrimaryButton onClick={() => startScan(false)} disabled={running}>
           Optimize Now
-        </button>
+        </PrimaryButton>
       </div>
 
       {running && <ProgressBar />}
 
-      <div
-        ref={scrollRef}
-        className="bg-gray-950 border border-gray-800 rounded-lg p-4 h-80 overflow-y-auto font-mono text-xs"
-      >
-        {lines.length === 0 && !running && (
-          <div className="text-gray-600">
-            Press Dry Run to preview, or Optimize Now to execute.
-          </div>
-        )}
-        {lines.map((line, i) => (
-          <div key={i} className={`leading-relaxed ${getLineStyle(line)}`}>
-            {line}
-          </div>
-        ))}
-      </div>
+      <LogTerminal
+        lines={lines}
+        running={running}
+        emptyMessage="Press Dry Run to preview, or Optimize Now to execute."
+        scrollRef={scrollRef}
+        getLineStyle={optimizeLineStyle}
+      />
 
-      {result && (
-        <div className="bg-green-900/30 border border-green-800 rounded-lg p-4">
-          <div className="text-green-400 font-semibold text-sm">
-            {result.summary}
-          </div>
-        </div>
-      )}
+      {result && <ResultBanner result={result} accent={accent} />}
     </div>
   );
-}
-
-function getLineStyle(line: string): string {
-  const lower = line.toLowerCase();
-  if (lower.includes("completed") || lower.includes("success")) {
-    return "text-green-400 font-bold";
-  }
-  if (line.startsWith("[stderr]")) return "text-red-400";
-  if (line.includes("✓")) return "text-green-300";
-  if (line.includes("error") || line.startsWith("✗")) return "text-red-400";
-  return "text-gray-400";
 }

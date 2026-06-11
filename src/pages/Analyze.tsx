@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { scanDirectory, type DirEntry, type TreemapNode } from "../lib/api";
 import { formatBytes } from "../lib/format";
+import GlassCard from "../components/GlassCard";
+import { PrimaryButton } from "../components/ActionButton";
+import PageTitle from "../components/PageTitle";
 
 export default function Analyze(): React.ReactElement {
   const [currentPath, setCurrentPath] = useState<string>("C:\\Users");
@@ -50,14 +53,18 @@ export default function Analyze(): React.ReactElement {
     doScan(currentPath, true);
   };
 
-  const treemapData: TreemapNode[] = entries.map((e) => ({
-    name: e.name,
-    value: e.size || 1,
-    path: e.path,
-    isDir: e.is_dir,
-  }));
+  const treemapData: TreemapNode[] = useMemo(
+    () =>
+      entries.map((e) => ({
+        name: e.name,
+        value: e.size || 1,
+        path: e.path,
+        isDir: e.is_dir,
+      })),
+    [entries],
+  );
 
-  const option = {
+  const option = useMemo(() => ({
     tooltip: {
       formatter: (params: unknown) => {
         const d = (params as { data: { name: string; value: number; isDir: boolean } }).data;
@@ -92,25 +99,25 @@ export default function Analyze(): React.ReactElement {
           color: "#888",
           fontSize: 10,
         },
-        itemStyle: { borderColor: "#0a0a0f", borderWidth: 2 },
+        itemStyle: { borderColor: "#0B0B0D", borderWidth: 2 },
         levels: [
           {
             colorMappingBy: "value",
             color: [
-              "#4a1a6b",
-              "#5a2d7a",
-              "#6b3fa0",
-              "#7d52c6",
-              "#8f64ec",
-              "#a177f0",
-              "#b38af4",
-              "#c59df8",
+              "#12233A",
+              "#152B4A",
+              "#193359",
+              "#1D3C6E",
+              "#224C8A",
+              "#275DA0",
+              "#2C6DB5",
+              "#3580CC",
             ],
           },
         ],
       },
     ],
-  };
+  }), [treemapData]);
 
   const onChartClick = (params: unknown) => {
     const p = params as { data?: { path: string; isDir: boolean } };
@@ -131,22 +138,24 @@ export default function Analyze(): React.ReactElement {
     shell.open(`file:///${path.replace(/\\/g, "/")}`);
   };
 
-  const totalSize = entries.reduce((sum, e) => sum + e.size, 0);
+  const totalSize = useMemo(() => entries.reduce((sum, e) => sum + e.size, 0), [entries]);
 
   return (
-    <div className="p-4 space-y-4 h-full flex flex-col">
-      {/* Breadcrumb + Path Input */}
+    <div className="space-y-4 h-full flex flex-col">
+      <PageTitle>Disk Analysis</PageTitle>
+
       <div className="space-y-2">
-        <div className="flex items-center gap-1 text-sm text-gray-400 flex-wrap">
+        <div className="flex items-center gap-1 text-sm flex-wrap">
           {breadcrumb.map((p, i) => {
             const parts = p.split("\\");
             const label = i === 0 ? parts[0] : parts[parts.length - 1];
             return (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 && <span className="text-gray-600">/</span>}
+              <span key={i} className="flex items-center gap-1 font-mono text-[10px]">
+                {i > 0 && <span style={{ color: "rgba(255,255,255,0.25)" }}>/</span>}
                 <button
                   onClick={() => navigateTo(i)}
-                  className="hover:text-white transition-colors"
+                  className="transition-colors duration-150"
+                  style={{ color: "rgba(255,255,255,0.40)" }}
                 >
                   {label || p}
                 </button>
@@ -159,44 +168,45 @@ export default function Analyze(): React.ReactElement {
             type="text"
             value={currentPath}
             onChange={(e) => setCurrentPath(e.target.value)}
-            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 font-mono focus:outline-none focus:border-purple-500"
+            className="flex-1 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none"
+            style={{
+              background: "rgba(255,255,255,0.055)",
+              border: "1px solid rgba(255,255,255,0.085)",
+              color: "rgba(255,255,255,0.80)",
+            }}
             placeholder="C:\Users\..."
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-500 disabled:opacity-40 transition-colors"
-          >
+          <PrimaryButton onClick={() => handlePathSubmit({ preventDefault: () => {} } as React.FormEvent)} disabled={loading}>
             {loading ? "Scanning..." : "Scan"}
-          </button>
+          </PrimaryButton>
         </form>
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center gap-4 text-xs text-gray-500 bg-gray-900 rounded-lg px-4 py-2 border border-gray-800">
-        <span>{entries.length} items</span>
-        <span>Total: {formatBytes(totalSize)}</span>
+      <GlassCard className="flex items-center gap-4 text-xs font-mono px-4 py-2">
+        <span style={{ color: "rgba(255,255,255,0.40)" }}>{entries.length} items</span>
+        <span style={{ color: "rgba(255,255,255,0.62)" }}>Total: {formatBytes(totalSize)}</span>
         {selectedPath && (
           <>
-            <span className="text-gray-600">|</span>
-            <span className="text-gray-400 truncate">{selectedPath}</span>
+            <span style={{ color: "rgba(255,255,255,0.25)" }}>|</span>
+            <span className="truncate" style={{ color: "rgba(255,255,255,0.62)" }}>
+              {selectedPath}
+            </span>
             <button
               onClick={() => openInExplorer(selectedPath)}
-              className="text-purple-400 hover:text-purple-300 transition-colors"
+              className="transition-colors duration-150"
             >
               Open in Explorer
             </button>
           </>
         )}
-      </div>
+      </GlassCard>
 
-      {/* Treemap */}
       {loading && entries.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
+        <div className="flex-1 flex items-center justify-center" style={{ color: "rgba(255,255,255,0.40)" }}>
           Scanning...
         </div>
       ) : entries.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
+        <div className="flex-1 flex items-center justify-center" style={{ color: "rgba(255,255,255,0.25)" }}>
           No items found or access denied.
         </div>
       ) : (
